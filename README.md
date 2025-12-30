@@ -1,5 +1,5 @@
 // Global Site Health Overview (Dot Map)
-// Category is derived from how many network devices Dynatrace currently sees per site tag.
+// Category distinguishes NoData vs real health states
 
 // ---------- Site 1 — BEA-ADV ----------
 fetch dt.entity.network_device
@@ -8,7 +8,7 @@ fetch dt.entity.network_device
 | fieldsAdd expectedMin = 1
 | fieldsAdd category =
     if(condition: deviceCount == 0,
-       then: "Critical",
+       then: "NoData",
        else: if(condition: deviceCount < expectedMin,
                 then: "Warning",
                 else: "Good"))
@@ -16,7 +16,7 @@ fetch dt.entity.network_device
     name      = "BEA-ADV",
     latitude  = 41.4839,
     longitude = -81.5087
-| fields name, category, deviceCount, latitude, longitude
+| fields name, category, deviceCount, expectedMin, latitude, longitude
 
 // ---------- Site 2 — CAR01-PD ----------
 | append [
@@ -26,7 +26,7 @@ fetch dt.entity.network_device
     | fieldsAdd expectedMin = 1
     | fieldsAdd category =
         if(condition: deviceCount == 0,
-           then: "Critical",
+           then: "NoData",
            else: if(condition: deviceCount < expectedMin,
                     then: "Warning",
                     else: "Good"))
@@ -34,5 +34,5 @@ fetch dt.entity.network_device
         name      = "CAR01-PD",
         latitude  = 35.0074,
         longitude = -80.9451
-    | fields name, category, deviceCount, latitude, longitude
+    | fields name, category, deviceCount, expectedMin, latitude, longitude
 ]
