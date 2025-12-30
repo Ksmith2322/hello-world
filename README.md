@@ -1,14 +1,15 @@
 // Global Site Health Overview (Dot Map)
-// Category is derived from how many devices are reporting per site
+// Category is derived from how many network devices are currently seen per site tag.
 
 // ---------- Site 1 — BEA-ADV (Cleveland area) ----------
 fetch dt.entity.network_device
-| filter arrayContains(tags, "site:BEA-ADV")
+| filter in(needle: "site:BEA-ADV", haystack: tags)
 | summarize deviceCount = count()
+| fieldsAdd expectedMin = 1
 | fieldsAdd category = case(
-    deviceCount == 0, "Critical",
-    deviceCount < 1,  "Warning",
-    true,             "Good"
+    deviceCount == 0,               "Critical",
+    deviceCount < expectedMin,      "Warning",
+    true,                           "Good"
 )
 | fieldsAdd
     name      = "BEA-ADV",
@@ -19,12 +20,13 @@ fetch dt.entity.network_device
 // ---------- Site 2 — CAR01-PD (Fort Mill) ----------
 | append [
     fetch dt.entity.network_device
-    | filter arrayContains(tags, "site:CAR01-PD")
+    | filter in(needle: "site:CAR01-PD", haystack: tags)
     | summarize deviceCount = count()
+    | fieldsAdd expectedMin = 1
     | fieldsAdd category = case(
-        deviceCount == 0, "Critical",
-        deviceCount < 1,  "Warning",
-        true,             "Good"
+        deviceCount == 0,               "Critical",
+        deviceCount < expectedMin,      "Warning",
+        true,                           "Good"
     )
     | fieldsAdd
         name      = "CAR01-PD",
