@@ -1,9 +1,10 @@
+// Global Site Health Overview (Dot Map)
+// Adds: label + bubbleSize (safe enhancements)
+
 // ---------- Site 1 — BEA-ADV ----------
 fetch 'dt.entity.network:device'
 | filter in(needle: "site:BEA-ADV", haystack: tags)
-| summarize
-    deviceCount = count(),
-    impactedDevices = countIf(condition: healthStatus != "HEALTHY")   // <-- swap field/value if needed
+| summarize deviceCount = count()
 | fieldsAdd expectedDevices = 1
 | fieldsAdd coveragePct =
     if(condition: expectedDevices == 0,
@@ -12,24 +13,24 @@ fetch 'dt.entity.network:device'
 | fieldsAdd category =
     if(condition: deviceCount == 0,
        then: "NoData",
-       else: if(condition: impactedDevices > 0,
-                then: "Critical",
-                else: if(condition: coveragePct < 0.8,
-                         then: "Warning",
-                         else: "Good")))
+       else: if(condition: coveragePct < 0.8,
+                then: "Warning",
+                else: "Good"))
 | fieldsAdd
     name      = "BEA-ADV",
     latitude  = 41.4839,
     longitude = -81.5087
-| fields name, category, impactedDevices, deviceCount, expectedDevices, coveragePct, latitude, longitude
+// ⬇️ NEW: readable label + bubble sizing
+| fieldsAdd
+    label      = name + " (" + toString(deviceCount) + "/" + toString(expectedDevices) + ")",
+    bubbleSize = deviceCount
+| fields name, label, category, bubbleSize, deviceCount, expectedDevices, coveragePct, latitude, longitude
 
 // ---------- Site 2 — CAR01-PD ----------
 | append [
     fetch 'dt.entity.network:device'
     | filter in(needle: "site:CAR01-PD", haystack: tags)
-    | summarize
-        deviceCount = count(),
-        impactedDevices = countIf(condition: healthStatus != "HEALTHY")  // <-- swap field/value if needed
+    | summarize deviceCount = count()
     | fieldsAdd expectedDevices = 1
     | fieldsAdd coveragePct =
         if(condition: expectedDevices == 0,
@@ -38,14 +39,16 @@ fetch 'dt.entity.network:device'
     | fieldsAdd category =
         if(condition: deviceCount == 0,
            then: "NoData",
-           else: if(condition: impactedDevices > 0,
-                    then: "Critical",
-                    else: if(condition: coveragePct < 0.8,
-                             then: "Warning",
-                             else: "Good")))
+           else: if(condition: coveragePct < 0.8,
+                    then: "Warning",
+                    else: "Good"))
     | fieldsAdd
         name      = "CAR01-PD",
         latitude  = 35.0074,
         longitude = -80.9451
-    | fields name, category, impactedDevices, deviceCount, expectedDevices, coveragePct, latitude, longitude
+    // ⬇️ NEW
+    | fieldsAdd
+        label      = name + " (" + toString(deviceCount) + "/" + toString(expectedDevices) + ")",
+        bubbleSize = deviceCount
+    | fields name, label, category, bubbleSize, deviceCount, expectedDevices, coveragePct, latitude, longitude
 ]
