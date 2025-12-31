@@ -357,6 +357,181 @@ fetch `dt.entity.network:device`
              alertCount, deviceCount, expectedDevices, coveragePct,
              latitude, longitude
 ]
+// ===========================
+// SITE 7 — ALCVA-ADV
+// ===========================
+| append [
+    fetch `dt.entity.network:device`
+    | filter in(needle: "site:ALCVA-ADV", haystack: tags)
+    | summarize deviceCount = count()
+    | fieldsAdd expectedDevices = 1
+    | fieldsAdd coveragePct =
+        if(condition: expectedDevices == 0,
+           then: 0.0,
+           else: toDouble(deviceCount) / toDouble(expectedDevices))
+
+    | append [
+        fetch events
+        | filter status == "OPEN"
+        | filter in(needle: "site:ALCVA-ADV", haystack: tags)
+        | summarize alertCount = count()
+    ]
+
+    | fieldsAdd hasAlert =
+        if(condition: alertCount > 0, then: 1, else: 0)
+
+    | fieldsAdd category =
+        if(condition: hasAlert == 1,
+           then: "Critical",
+           else: if(condition: deviceCount == 0,
+                    then: "NoData",
+                    else: if(condition: coveragePct < 0.8,
+                             then: "Warning",
+                             else: "Good")))
+
+    | fieldsAdd categoryRank =
+        if(condition: category == "Critical",
+           then: 0,
+           else: if(condition: category == "NoData",
+                    then: 1,
+                    else: if(condition: category == "Warning",
+                             then: 2,
+                             else: 3)))
+
+    | fieldsAdd
+        site_id   = "site:ALCVA-ADV",
+        site_code = "ALCVA-ADV",
+        site_name = "Viera – ALCVA Advanced",
+        address   = "Viera, FL",
+        region    = "AMER",
+        owner     = "Network Ops",
+        name      = "ALCVA-ADV",
+        latitude  = 28.2664,
+        longitude = -80.7289
+
+    | fields name, site_id, site_code, site_name, address, region, owner,
+             category, categoryRank,
+             alertCount, deviceCount, expectedDevices, coveragePct,
+             latitude, longitude
+]
+
+
+// ===========================
+// SITE 8 — ALCWH-ADV
+// ===========================
+| append [
+    fetch `dt.entity.network:device`
+    | filter in(needle: "site:ALCWH-ADV", haystack: tags)
+    | summarize deviceCount = count()
+    | fieldsAdd expectedDevices = 1
+    | fieldsAdd coveragePct =
+        if(condition: expectedDevices == 0,
+           then: 0.0,
+           else: toDouble(deviceCount) / toDouble(expectedDevices))
+
+    | append [
+        fetch events
+        | filter status == "OPEN"
+        | filter in(needle: "site:ALCWH-ADV", haystack: tags)
+        | summarize alertCount = count()
+    ]
+
+    | fieldsAdd hasAlert =
+        if(condition: alertCount > 0, then: 1, else: 0)
+
+    | fieldsAdd category =
+        if(condition: hasAlert == 1,
+           then: "Critical",
+           else: if(condition: deviceCount == 0,
+                    then: "NoData",
+                    else: if(condition: coveragePct < 0.8,
+                             then: "Warning",
+                             else: "Good")))
+
+    | fieldsAdd categoryRank =
+        if(condition: category == "Critical",
+           then: 0,
+           else: if(condition: category == "NoData",
+                    then: 1,
+                    else: if(condition: category == "Warning",
+                             then: 2,
+                             else: 3)))
+
+    | fieldsAdd
+        site_id   = "site:ALCWH-ADV",
+        site_code = "ALCWH-ADV",
+        site_name = "Winter Haven – ALCWH Advanced",
+        address   = "Winter Haven, FL",
+        region    = "AMER",
+        owner     = "Network Ops",
+        name      = "ALCWH-ADV",
+        latitude  = 28.022243,
+        longitude = -81.732857
+
+    | fields name, site_id, site_code, site_name, address, region, owner,
+             category, categoryRank,
+             alertCount, deviceCount, expectedDevices, coveragePct,
+             latitude, longitude
+]
+
+
+// ===========================
+// SITE 9 — ATL-ADV
+// ===========================
+| append [
+    fetch `dt.entity.network:device`
+    | filter in(needle: "site:ATL-ADV", haystack: tags)
+    | summarize deviceCount = count()
+    | fieldsAdd expectedDevices = 1
+    | fieldsAdd coveragePct =
+        if(condition: expectedDevices == 0,
+           then: 0.0,
+           else: toDouble(deviceCount) / toDouble(expectedDevices))
+
+    | append [
+        fetch events
+        | filter status == "OPEN"
+        | filter in(needle: "site:ATL-ADV", haystack: tags)
+        | summarize alertCount = count()
+    ]
+
+    | fieldsAdd hasAlert =
+        if(condition: alertCount > 0, then: 1, else: 0)
+
+    | fieldsAdd category =
+        if(condition: hasAlert == 1,
+           then: "Critical",
+           else: if(condition: deviceCount == 0,
+                    then: "NoData",
+                    else: if(condition: coveragePct < 0.8,
+                             then: "Warning",
+                             else: "Good")))
+
+    | fieldsAdd categoryRank =
+        if(condition: category == "Critical",
+           then: 0,
+           else: if(condition: category == "NoData",
+                    then: 1,
+                    else: if(condition: category == "Warning",
+                             then: 2,
+                             else: 3)))
+
+    | fieldsAdd
+        site_id   = "site:ATL-ADV",
+        site_code = "ATL-ADV",
+        site_name = "Atlanta – ATL Advanced",
+        address   = "5555 Glenridge Connector, Ste 1075, Atlanta, GA 30342",
+        region    = "AMER",
+        owner     = "Network Ops",
+        name      = "ATL-ADV",
+        latitude  = 33.90409,
+        longitude = -84.35982
+
+    | fields name, site_id, site_code, site_name, address, region, owner,
+             category, categoryRank,
+             alertCount, deviceCount, expectedDevices, coveragePct,
+             latitude, longitude
+]
 
 
 // Optional for table tile:
