@@ -1,9 +1,12 @@
 // Global Site Health Overview (Dot Map)
-// Adds quick alert visibility using Events (since Synthetics isn't available)
+// Adds quick alert visibility using Events (tenant-safe)
 
-// ---------------------------
-// Site 1 — BEA-ADV
-// ---------------------------
+
+// ===========================
+// SITE 1 — BEA-ADV
+// ===========================
+
+// ---- Device visibility ----
 fetch `dt.entity.network:device`
 | filter in(needle: "site:BEA-ADV", haystack: tags)
 | summarize deviceCount = count()
@@ -13,20 +16,18 @@ fetch `dt.entity.network:device`
        then: 0.0,
        else: toDouble(deviceCount) / toDouble(expectedDevices))
 
-// NEW: recent alert visibility (events in last 15m)
+// ---- Event-based alert signal (FIXED timeframe usage) ----
 | append [
     fetch events
-    | filter timeframe(from: now() - 15m, to: now())
+    | timeframe(from: now() - 15m, to: now())
     | filter in(needle: "site:BEA-ADV", haystack: tags)
-    // Keep this broad first; tighten once you confirm the fields in your tenant
     | summarize alertCount = count()
 ]
 
-// NEW: if any recent alerts, call it Critical (fast “heads up” signal)
+// ---- Final site status ----
 | fieldsAdd hasAlert =
     if(condition: alertCount > 0, then: 1, else: 0)
 
-// Final category (alerts first, then visibility/coverage)
 | fieldsAdd category =
     if(condition: hasAlert == 1,
        then: "Critical",
@@ -45,6 +46,7 @@ fetch `dt.entity.network:device`
                          then: 2,
                          else: 3)))
 
+// ---- Site metadata ----
 | fieldsAdd
     site_id   = "site:BEA-ADV",
     site_code = "BEA-ADV",
@@ -61,9 +63,9 @@ fetch `dt.entity.network:device`
          latitude, longitude
 
 
-// ---------------------------
-// Site 2 — CAR01-PD
-// ---------------------------
+// ===========================
+// SITE 2 — CAR01-PD
+// ===========================
 | append [
     fetch `dt.entity.network:device`
     | filter in(needle: "site:CAR01-PD", haystack: tags)
@@ -76,7 +78,7 @@ fetch `dt.entity.network:device`
 
     | append [
         fetch events
-        | filter timeframe(from: now() - 15m, to: now())
+        | timeframe(from: now() - 15m, to: now())
         | filter in(needle: "site:CAR01-PD", haystack: tags)
         | summarize alertCount = count()
     ]
@@ -118,5 +120,5 @@ fetch `dt.entity.network:device`
              latitude, longitude
 ]
 
-// Optional for Table tile:
+// Optional for table tile:
 // | sort categoryRank asc, coveragePct asc
