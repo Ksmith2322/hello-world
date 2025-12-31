@@ -1,5 +1,5 @@
 // Global Site Health Overview (Dot Map)
-// Adds: label + bubbleSize (safe enhancements)
+// Uses name as label, bubbleSize for scale, tooltips for detail
 
 // ---------- Site 1 — BEA-ADV ----------
 fetch 'dt.entity.network:device'
@@ -17,14 +17,11 @@ fetch 'dt.entity.network:device'
                 then: "Warning",
                 else: "Good"))
 | fieldsAdd
-    name      = "BEA-ADV",
-    latitude  = 41.4839,
-    longitude = -81.5087
-// ⬇️ NEW: readable label + bubble sizing
-| fieldsAdd
-    label      = name + " (" + toString(deviceCount) + "/" + toString(expectedDevices) + ")",
+    name       = "BEA-ADV",
+    latitude   = 41.4839,
+    longitude  = -81.5087,
     bubbleSize = deviceCount
-| fields name, label, category, bubbleSize, deviceCount, expectedDevices, coveragePct, latitude, longitude
+| fields name, category, bubbleSize, deviceCount, expectedDevices, coveragePct, latitude, longitude
 
 // ---------- Site 2 — CAR01-PD ----------
 | append [
@@ -43,12 +40,9 @@ fetch 'dt.entity.network:device'
                     then: "Warning",
                     else: "Good"))
     | fieldsAdd
-        name      = "CAR01-PD",
-        latitude  = 35.0074,
-        longitude = -80.9451
-    // ⬇️ NEW
-    | fieldsAdd
-        label      = name + " (" + toString(deviceCount) + "/" + toString(expectedDevices) + ")",
+        name       = "CAR01-PD",
+        latitude   = 35.0074,
+        longitude  = -80.9451,
         bubbleSize = deviceCount
-    | fields name, label, category, bubbleSize, deviceCount, expectedDevices, coveragePct, latitude, longitude
+    | fields name, category, bubbleSize, deviceCount, expectedDevices, coveragePct, latitude, longitude
 ]
