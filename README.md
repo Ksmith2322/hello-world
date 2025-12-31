@@ -1,14 +1,9 @@
 // Global Site Health Overview (Dot Map)
-// Combines:
-// - Device visibility (coverage)
-// - Synthetic availability (reachability)
-// Produces: Critical / Warning / Good / NoData
+// Adds quick alert visibility using Events (since Synthetics isn't available)
 
-// ===========================
-// SITE 1 — BEA-ADV
-// ===========================
-
-// ---- Device visibility (what you already built) ----
+// ---------------------------
+// Site 1 — BEA-ADV
+// ---------------------------
 fetch `dt.entity.network:device`
 | filter in(needle: "site:BEA-ADV", haystack: tags)
 | summarize deviceCount = count()
@@ -18,26 +13,22 @@ fetch `dt.entity.network:device`
        then: 0.0,
        else: toDouble(deviceCount) / toDouble(expectedDevices))
 
-// ---- Synthetic availability (NEW) ----
+// NEW: recent alert visibility (events in last 15m)
 | append [
-    fetch dt.synthetic.monitor
+    fetch events
+    | filter timeframe(from: now() - 15m, to: now())
     | filter in(needle: "site:BEA-ADV", haystack: tags)
-    // last 10 minutes is a good “is it up right now?” window
-    | filter timeframe(from: now() - 10m, to: now())
-    | summarize
-        totalRuns   = count(),
-        failedRuns  = countIf(condition: success == false)
-    | fieldsAdd siteDown =
-        if(condition: totalRuns == 0,
-           then: 1,                 // no synthetic data = treat as down
-           else: if(condition: failedRuns > 0,
-                    then: 1,
-                    else: 0))
+    // Keep this broad first; tighten once you confirm the fields in your tenant
+    | summarize alertCount = count()
 ]
 
-// ---- Final site category (availability first, then visibility) ----
+// NEW: if any recent alerts, call it Critical (fast “heads up” signal)
+| fieldsAdd hasAlert =
+    if(condition: alertCount > 0, then: 1, else: 0)
+
+// Final category (alerts first, then visibility/coverage)
 | fieldsAdd category =
-    if(condition: siteDown == 1,
+    if(condition: hasAlert == 1,
        then: "Critical",
        else: if(condition: deviceCount == 0,
                 then: "NoData",
@@ -45,7 +36,6 @@ fetch `dt.entity.network:device`
                          then: "Warning",
                          else: "Good")))
 
-// ---- Sorting helper (for table views) ----
 | fieldsAdd categoryRank =
     if(condition: category == "Critical",
        then: 0,
@@ -55,7 +45,6 @@ fetch `dt.entity.network:device`
                          then: 2,
                          else: 3)))
 
-// ---- Site metadata + map placement ----
 | fieldsAdd
     site_id   = "site:BEA-ADV",
     site_code = "BEA-ADV",
@@ -68,13 +57,13 @@ fetch `dt.entity.network:device`
 
 | fields name, site_id, site_code, site_name, region, owner,
          category, categoryRank,
-         siteDown, deviceCount, expectedDevices, coveragePct,
+         alertCount, deviceCount, expectedDevices, coveragePct,
          latitude, longitude
 
 
-// ===========================
-// SITE 2 — CAR01-PD
-// ===========================
+// ---------------------------
+// Site 2 — CAR01-PD
+// ---------------------------
 | append [
     fetch `dt.entity.network:device`
     | filter in(needle: "site:CAR01-PD", haystack: tags)
@@ -86,22 +75,17 @@ fetch `dt.entity.network:device`
            else: toDouble(deviceCount) / toDouble(expectedDevices))
 
     | append [
-        fetch dt.synthetic.monitor
+        fetch events
+        | filter timeframe(from: now() - 15m, to: now())
         | filter in(needle: "site:CAR01-PD", haystack: tags)
-        | filter timeframe(from: now() - 10m, to: now())
-        | summarize
-            totalRuns  = count(),
-            failedRuns = countIf(condition: success == false)
-        | fieldsAdd siteDown =
-            if(condition: totalRuns == 0,
-               then: 1,
-               else: if(condition: failedRuns > 0,
-                        then: 1,
-                        else: 0))
+        | summarize alertCount = count()
     ]
 
+    | fieldsAdd hasAlert =
+        if(condition: alertCount > 0, then: 1, else: 0)
+
     | fieldsAdd category =
-        if(condition: siteDown == 1,
+        if(condition: hasAlert == 1,
            then: "Critical",
            else: if(condition: deviceCount == 0,
                     then: "NoData",
@@ -130,9 +114,9 @@ fetch `dt.entity.network:device`
 
     | fields name, site_id, site_code, site_name, region, owner,
              category, categoryRank,
-             siteDown, deviceCount, expectedDevices, coveragePct,
+             alertCount, deviceCount, expectedDevices, coveragePct,
              latitude, longitude
 ]
 
-// Optional (TABLE tile):
+// Optional for Table tile:
 // | sort categoryRank asc, coveragePct asc
