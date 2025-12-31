@@ -1,5 +1,5 @@
 // Global Site Health Overview (Dot Map)
-// Adds quick alert visibility using Events (tenant-safe)
+// Adds live alert visibility using ACTIVE events (tenant-safe)
 
 
 // ===========================
@@ -16,10 +16,10 @@ fetch `dt.entity.network:device`
        then: 0.0,
        else: toDouble(deviceCount) / toDouble(expectedDevices))
 
-// ---- Event-based alert signal (FIXED timeframe usage) ----
+// ---- Live alert signal (NO timeframe) ----
 | append [
     fetch events
-    | timeframe(from: now() - 15m, to: now())
+    | filter status == "OPEN"
     | filter in(needle: "site:BEA-ADV", haystack: tags)
     | summarize alertCount = count()
 ]
@@ -78,7 +78,7 @@ fetch `dt.entity.network:device`
 
     | append [
         fetch events
-        | timeframe(from: now() - 15m, to: now())
+        | filter status == "OPEN"
         | filter in(needle: "site:CAR01-PD", haystack: tags)
         | summarize alertCount = count()
     ]
