@@ -1,10 +1,27 @@
 fetch `dt.entity.network:device`
 | filter in(needle: "site:BEA-ADV", haystack: tags)
+
+// ---- Join OPEN events back to devices (explicit entity join) ----
 | lookup [
     fetch events
     | filter status == "OPEN"
-    | summarize alertCount = count() by affectedEntity
+    | summarize
+        critical = countIf(severityLevel == "CRITICAL"),
+        warning  = countIf(severityLevel == "WARNING")
+      by affectedEntity
 ] on affectedEntity == entity.id
-| fields entity.name, dt.ip_addresses, alertCount
-| fieldsAdd alertCount = if(isNull(alertCount), 0, alertCount)
-| sort alertCount desc, entity.name asc
+
+// ---- Normalize nulls so all devices show cleanly ----
+| fieldsAdd
+    critical = if(isNull(critical), 0, critical),
+    warning  = if(isNull(warning), 0, warning)
+
+// ---- Output fields ----
+| fields
+    entity.name,
+    dt.ip_addresses,
+    critical,
+    warning
+
+// ---- Sort so the most broken devices appear first ----
+| sort critical desc, warning desc, entity.name asc
