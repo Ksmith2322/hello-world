@@ -1,3 +1,3 @@
-timeseries sys_plane = avg('com.dynatrace.extension.palo-alto.generic.cpu.system.utilization'),
-  by:{'dt.entity.palo-alto:device'}
-| sort arrayAvg(sys_plane) desc
+timeseries dp_cpu = avg(paloalto.dataplane.cpu.utilization),
+  by:{sys.name, dataplane}
+| sort arrayAvg(dp_cpu) desc
